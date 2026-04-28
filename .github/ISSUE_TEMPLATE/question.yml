@@ -1,0 +1,17 @@
+name: Question
+description: Ask a usage or configuration question
+title: "[Question]: "
+labels: [question]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What are you trying to do?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: UI page, CLI command, model provider, and relevant logs. Remove secrets and private text.

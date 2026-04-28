@@ -1,0 +1,56 @@
+[project]
+name = "fanqie-novel-lab"
+version = "0.1.0"
+description = "Chinese web novel ideation, outline, chapter generation, review, and publishing workflow lab"
+readme = "README.md"
+license = { file = "LICENSE" }
+keywords = ["writing", "novel", "streamlit", "electron", "llm", "outline", "chinese-fiction"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: End Users/Desktop",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Text Processing",
+]
+requires-python = ">=3.10"
+dependencies = [
+  "beautifulsoup4>=4.12.3",
+  "json-repair>=0.30.0",
+  "openai>=1.55.0",
+  "pandas>=2.2.2",
+  "pillow>=10.0.0",
+  "pydantic>=2.7.0",
+  "pydantic-settings>=2.2.1",
+  "python-dotenv>=1.0.1",
+  "rapidfuzz>=3.9.0",
+  "requests>=2.32.0",
+  "rich>=13.7.1",
+  "streamlit>=1.36.0",
+  "typer>=0.12.3"
+]
+
+[project.optional-dependencies]
+dev = [
+  "build>=1.2.0",
+]
+
+[project.scripts]
+fanqie-lab = "fanqie_novel_lab.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project.urls]
+Homepage = "https://github.com/<your-name>/fanqie-novel-lab"
+Issues = "https://github.com/<your-name>/fanqie-novel-lab/issues"
+Documentation = "https://github.com/<your-name>/fanqie-novel-lab/tree/main/docs"
+
+[tool.setuptools]
+license-files = ["LICENSE"]

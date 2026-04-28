@@ -1,0 +1,53 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# macOS / editors
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Node / Electron
+.npm-cache/
+electron-client/node_modules/
+electron-client/dist/
+electron-client/out/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local app state
+data/db/*.sqlite3
+data/db/*.sqlite3-*
+data/config/model_profiles.json
+data/config/font_cache/
+logs/*.log
+logs/*.pid
+
+# Generated writing outputs
+outputs/**/*.json
+outputs/**/*.md
+outputs/**/*.txt
+!outputs/**/.gitkeep
+
+# Local backups
+*.bak
+*.bak_*
