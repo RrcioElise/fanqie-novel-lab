@@ -5,6 +5,8 @@
 [![Electron](https://img.shields.io/badge/Desktop-Electron-47848F?logo=electron&logoColor=white)](https://www.electronjs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+官网介绍页：[https://novel.zns.cc](https://novel.zns.cc)
+
 Fanqie Novel Lab 是一个面向中文网文创作流程的本地工作台：采集公开榜单元数据、生成原创大纲、人审润色、避撞审查、章节生成、章节对纲审核、发布包管理，并支持 OpenAI-compatible API 与 Claude CLI 等模型接入。
 
 > 项目定位：辅助原创创作和本地编辑工作流，不是自动搬运/洗稿工具。
