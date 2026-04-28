@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Fanqie Novel Lab：面向中文网文创作的本地 AI 工作台，支持大纲、章节、避撞审查、发布包和多模型配置。" />
+  <title>Fanqie Novel Lab · 本地 AI 小说创作工作台</title>
+  <style>
+    :root {
+      --bg: #f6f3ed;
+      --paper: #fffdf8;
+      --ink: #111318;
+      --muted: #626873;
+      --line: #e7dfd3;
+      --accent: #ef3e2e;
+      --dark: #15171d;
+      --soft: #fff0eb;
+      --green: #16825d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 80% 0%, rgba(239, 62, 46, .12), transparent 30%),
+        linear-gradient(180deg, #fbfaf7, var(--bg));
+    }
+    a { color: inherit; }
+    .wrap { width: min(1120px, calc(100% - 36px)); margin: 0 auto; }
+    .nav { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:22px 0; border-bottom:1px solid var(--line); }
+    .brand { display:flex; align-items:center; gap:12px; font-weight:950; letter-spacing:-.04em; }
+    .logo { width:38px; height:38px; border-radius:12px; display:grid; place-items:center; background:var(--dark); color:#fff; }
+    .navlinks { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+    .navlinks a, .btn { text-decoration:none; border:1px solid var(--line); background:rgba(255,255,255,.72); padding:10px 14px; border-radius:999px; font-weight:850; font-size:14px; }
+    .hero { display:grid; grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr); gap:28px; align-items:center; padding:64px 0 40px; }
+    .kicker { color:var(--accent); font-weight:950; font-size:12px; letter-spacing:.16em; text-transform:uppercase; }
+    h1 { margin:12px 0 14px; font-size: clamp(42px, 7vw, 82px); line-height:.94; letter-spacing:-.08em; }
+    .lead { max-width:760px; color:var(--muted); font-size:18px; line-height:1.75; }
+    .actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:26px; }
+    .btn.primary { background:var(--dark); color:#fff; border-color:var(--dark); box-shadow:0 14px 32px rgba(17,19,24,.18); }
+    .btn.accent { background:var(--soft); color:#b42318; border-color:#ffd5cb; }
+    .panel { background:var(--dark); color:#fff; border-radius:28px; padding:24px; box-shadow:0 22px 70px rgba(17,19,24,.18); position:relative; overflow:hidden; }
+    .panel:after { content:""; position:absolute; width:220px; height:220px; border-radius:999px; right:-90px; top:-80px; background:radial-gradient(circle, rgba(239,62,46,.45), transparent 68%); }
+    .panel > * { position:relative; z-index:1; }
+    .panel h2 { margin:0 0 14px; font-size:25px; letter-spacing:-.05em; }
+    .panel p { color:rgba(255,255,255,.68); line-height:1.7; margin:0; }
+    .statgrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:18px; }
+    .stat { border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.07); border-radius:16px; padding:14px; }
+    .stat strong { display:block; font-size:24px; }
+    .stat span { color:rgba(255,255,255,.54); font-size:12px; }
+    .section { padding:34px 0; border-top:1px solid var(--line); }
+    .section h2 { margin:8px 0 12px; font-size:34px; letter-spacing:-.06em; }
+    .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-top:20px; }
+    .card { border:1px solid var(--line); background:rgba(255,255,255,.68); border-radius:20px; padding:18px; min-height:156px; }
+    .card b { display:block; margin-bottom:8px; font-size:18px; letter-spacing:-.03em; }
+    .card p { color:var(--muted); line-height:1.65; margin:0; font-size:14px; }
+    .steps { display:grid; gap:10px; margin-top:18px; }
+    .step { display:flex; gap:12px; align-items:flex-start; padding:14px; border:1px solid var(--line); border-radius:18px; background:rgba(255,255,255,.72); }
+    .no { width:30px; height:30px; border-radius:10px; background:var(--dark); color:#fff; display:grid; place-items:center; flex:0 0 auto; font-weight:950; font-size:13px; }
+    .step p { margin:4px 0 0; color:var(--muted); line-height:1.6; }
+    .notice { margin:22px 0 0; padding:14px 16px; border-radius:18px; border:1px solid #d9efe5; background:#eefaf5; color:#0f6b4c; font-weight:760; line-height:1.65; }
+    .footer { padding:34px 0 44px; color:var(--muted); border-top:1px solid var(--line); font-size:14px; }
+    @media (max-width: 840px) {
+      .hero { grid-template-columns:1fr; padding-top:42px; }
+      .grid { grid-template-columns:1fr; }
+      .nav { align-items:flex-start; flex-direction:column; }
+      .navlinks { justify-content:flex-start; }
+      h1 { font-size:46px; }
+      .lead { font-size:16px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <nav class="nav">
+      <div class="brand"><div class="logo">F</div><div>Fanqie Novel Lab</div></div>
+      <div class="navlinks">
+        <a href="https://github.com/RrcioElise/fanqie-novel-lab">GitHub</a>
+        <a href="https://github.com/RrcioElise/fanqie-novel-lab/releases/tag/v0.1.0">下载 v0.1.0</a>
+      </div>
+    </nav>
+
+    <section class="hero">
+      <div>
+        <div class="kicker">Local AI Fiction Studio</div>
+        <h1>本地 AI 小说创作工作台。</h1>
+        <p class="lead">Fanqie Novel Lab 面向中文网文创作流程：公开元数据观察、原创大纲、审稿润色、避撞审查、章节生成、章节对纲审核和发布包管理。</p>
+        <div class="actions">
+          <a class="btn primary" href="https://github.com/RrcioElise/fanqie-novel-lab/releases/download/v0.1.0/fanqie-novel-lab-v0.1.0-windows.zip">Windows 下载</a>
+          <a class="btn accent" href="https://github.com/RrcioElise/fanqie-novel-lab/releases/download/v0.1.0/fanqie-novel-lab-v0.1.0-macos.zip">macOS 下载</a>
+          <a class="btn" href="https://github.com/RrcioElise/fanqie-novel-lab">查看源码</a>
+        </div>
+        <div class="notice">这个外网页面只介绍软件和提供下载；不提供在线创作服务，不访问你的本地作品、模型密钥或数据库。</div>
+      </div>
+      <aside class="panel">
+        <h2>为什么是本地？</h2>
+        <p>模型配置、样本库、生成的大纲和章节都保存在用户自己的电脑上。你可以连接 OpenAI-compatible 中转站、本地 Ollama / LM Studio，或 Claude CLI。</p>
+        <div class="statgrid">
+          <div class="stat"><strong>100%</strong><span>本地工作流</span></div>
+          <div class="stat"><strong>Win/Mac</strong><span>双平台脚本</span></div>
+          <div class="stat"><strong>MIT</strong><span>开源许可</span></div>
+          <div class="stat"><strong>v0.1.0</strong><span>预览版本</span></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="section">
+      <div class="kicker">Workflow</div>
+      <h2>从题材到章节，再到发布包。</h2>
+      <div class="grid">
+        <div class="card"><b>🍅 数据花园</b><p>采集或导入公开榜单元数据，做题材趋势观察和避撞对比。</p></div>
+        <div class="card"><b>✍️ 大纲画布</b><p>设置题材、读者、钩子和约束，生成可审稿的长篇大纲。</p></div>
+        <div class="card"><b>🛡️ 原创避撞</b><p>用本地公开元数据检查相似钩子、关键词和设定风险。</p></div>
+        <div class="card"><b>📖 章节工坊</b><p>按章节数和目标字数生成正文，支持人工编辑和 AI 润色。</p></div>
+        <div class="card"><b>✅ 章节审核</b><p>对照大纲检查跑题、断纲、冲突未兑现和章末钩子弱等问题。</p></div>
+        <div class="card"><b>🚀 发布中心</b><p>管理作品档案、章节上传包、TXT / Markdown / JSON 导出。</p></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="kicker">Install</div>
+      <h2>三步启动。</h2>
+      <div class="steps">
+        <div class="step"><div class="no">1</div><div><b>安装环境</b><p>安装 Python 3.10+。桌面客户端还需要 Node.js LTS。</p></div></div>
+        <div class="step"><div class="no">2</div><div><b>下载发布包</b><p>Windows 解压后运行 <code>.\scripts\setup.ps1</code>；macOS 解压后运行 <code>bash scripts/setup.sh</code>。</p></div></div>
+        <div class="step"><div class="no">3</div><div><b>配置模型</b><p>进入“项目设置 → 模型”，填入你的中转站、本地模型或 Claude CLI 配置。</p></div></div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div>Fanqie Novel Lab · Open-source local AI fiction studio · <a href="https://github.com/RrcioElise/fanqie-novel-lab/blob/main/LICENSE">MIT License</a></div>
+    </footer>
+  </main>
+</body>
+</html>
