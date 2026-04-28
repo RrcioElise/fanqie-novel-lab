@@ -8,9 +8,11 @@ on:
 
 jobs:
   python-smoke:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
+        os: [ubuntu-latest, windows-latest]
         python-version: ["3.10", "3.11", "3.12"]
     steps:
       - name: Checkout
@@ -25,8 +27,36 @@ jobs:
           python -m pip install build
           python -m pip install -e .
       - name: Compile source
-        run: python -m py_compile $(find src -name '*.py')
+        run: python -c "import pathlib, py_compile; [py_compile.compile(str(p), doraise=True) for p in pathlib.Path('src').rglob('*.py')]"
       - name: Run smoke tests
         run: python -m unittest discover -s tests
       - name: Check package build
         run: python -m build
+      - name: Check PowerShell scripts parse
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          foreach ($file in Get-ChildItem scripts -Filter *.ps1) {
+            [scriptblock]::Create((Get-Content $file.FullName -Raw)) | Out-Null
+          }
+
+  electron-install:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node-version: ["20"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: electron-client/package-lock.json
+      - name: Install Electron dependencies
+        working-directory: electron-client
+        run: npm ci

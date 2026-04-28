@@ -2,17 +2,35 @@
 
 ## 本地开发
 
+macOS / Linux:
+
 ```bash
-git clone https://github.com/<your-name>/fanqie-novel-lab.git
+git clone https://github.com/RrcioElise/fanqie-novel-lab.git
 cd fanqie-novel-lab
 bash scripts/setup.sh
 bash scripts/run_app.sh
+```
+
+Windows PowerShell:
+
+```powershell
+git clone https://github.com/RrcioElise/fanqie-novel-lab.git
+cd fanqie-novel-lab
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\scripts\setup.ps1
+.\scripts\run_app.ps1
 ```
 
 Electron 客户端：
 
 ```bash
 bash scripts/run_electron.sh
+```
+
+Windows:
+
+```powershell
+.\scripts\run_electron.ps1
 ```
 
 ## 常用命令
@@ -26,6 +44,13 @@ python -m unittest discover -s tests
 
 # 开源发布体检
 fanqie-lab open-source-check
+```
+
+Windows 下 `find src -name '*.py'` 不可用时，可使用：
+
+```powershell
+python -c "import pathlib, py_compile; [py_compile.compile(str(p), doraise=True) for p in pathlib.Path('src').rglob('*.py')]"
+python -m unittest discover -s tests
 ```
 
 ## 模块边界

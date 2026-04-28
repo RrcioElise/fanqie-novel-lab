@@ -48,9 +48,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project.urls]
-Homepage = "https://github.com/<your-name>/fanqie-novel-lab"
-Issues = "https://github.com/<your-name>/fanqie-novel-lab/issues"
-Documentation = "https://github.com/<your-name>/fanqie-novel-lab/tree/main/docs"
+Homepage = "https://github.com/RrcioElise/fanqie-novel-lab"
+Issues = "https://github.com/RrcioElise/fanqie-novel-lab/issues"
+Documentation = "https://github.com/RrcioElise/fanqie-novel-lab/tree/main/docs"
 
 [tool.setuptools]
 license-files = ["LICENSE"]

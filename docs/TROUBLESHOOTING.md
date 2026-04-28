@@ -2,15 +2,31 @@
 
 ## Streamlit 启动失败
 
+macOS / Linux:
+
 ```bash
 bash scripts/setup.sh
 bash scripts/run_app.sh
+```
+
+Windows:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\scripts\setup.ps1
+.\scripts\run_app.ps1
 ```
 
 如果端口被占用，可先停止旧进程或改用：
 
 ```bash
 streamlit run src/fanqie_novel_lab/app.py --server.port 8502
+```
+
+Windows:
+
+```powershell
+.\scripts\run_app.ps1 -Port 8502
 ```
 
 ## Electron 打不开页面
@@ -22,6 +38,23 @@ streamlit run src/fanqie_novel_lab/app.py --server.port 8502
 rm -rf electron-client/node_modules
 bash scripts/run_electron.sh
 ```
+
+Windows:
+
+```powershell
+Remove-Item electron-client\node_modules -Recurse -Force
+.\scripts\run_electron.ps1
+```
+
+## Windows PowerShell 禁止运行脚本
+
+如果出现 `running scripts is disabled on this system`：
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+
+该命令只影响当前 PowerShell 窗口。
 
 ## 模型没有返回
 

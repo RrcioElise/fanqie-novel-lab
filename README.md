@@ -24,11 +24,31 @@ Fanqie Novel Lab 是一个面向中文网文创作流程的本地工作台：采
 
 ## 快速开始
 
+### macOS / Linux
+
 ```bash
-git clone https://github.com/<your-name>/fanqie-novel-lab.git
+git clone https://github.com/RrcioElise/fanqie-novel-lab.git
 cd fanqie-novel-lab
 bash scripts/setup.sh
 bash scripts/run_app.sh
+```
+
+### Windows 10/11
+
+先安装：
+
+- Python 3.10+（安装时勾选 **Add python.exe to PATH**）
+- Node.js LTS（用于 Electron 桌面客户端）
+- Git for Windows
+
+在 PowerShell 中运行：
+
+```powershell
+git clone https://github.com/RrcioElise/fanqie-novel-lab.git
+cd fanqie-novel-lab
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\scripts\setup.ps1
+.\scripts\run_app.ps1
 ```
 
 打开本地 Web UI：
@@ -43,6 +63,12 @@ http://127.0.0.1:8501
 bash scripts/run_electron.sh
 ```
 
+Windows 桌面客户端：
+
+```powershell
+.\scripts\run_electron.ps1
+```
+
 第一次启动 Electron 会在 `electron-client/` 下安装依赖。
 
 ## 模型配置
@@ -53,7 +79,7 @@ bash scripts/run_electron.sh
 cp .env.example .env
 ```
 
-也可以在客户端侧栏的“模型设置”中配置：
+也可以在客户端顶部的“项目设置 → 模型”中配置：
 
 - DeepSeek / OpenAI / OpenRouter
 - Ollama 本地模型
@@ -154,6 +180,7 @@ python -m unittest discover -s tests
 - [架构说明](docs/ARCHITECTURE.md)
 - [配置指南](docs/CONFIGURATION.md)
 - [开发者指南](docs/DEVELOPMENT.md)
+- [Windows 使用指南](docs/WINDOWS.md)
 - [排查指南](docs/TROUBLESHOOTING.md)
 - [数据与本地文件说明](docs/DATA_POLICY.md)
 - [发版指南](docs/RELEASE.md)

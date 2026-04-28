@@ -8,6 +8,12 @@ Copy the template:
 cp .env.example .env
 ```
 
+Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
 Common variables:
 
 | Variable | Description |
@@ -35,6 +41,12 @@ This file may contain credentials and is ignored by Git.
 
 ```bash
 bash scripts/run_electron.sh
+```
+
+Windows:
+
+```powershell
+.\scripts\run_electron.ps1
 ```
 
 Electron starts the local Streamlit server and opens it in a desktop window.

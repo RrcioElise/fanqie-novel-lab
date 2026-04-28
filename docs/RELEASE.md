@@ -10,8 +10,18 @@
 
 ## 发布前检查
 
+macOS / Linux:
+
 ```bash
 python -m py_compile $(find src -name '*.py')
+python -m unittest discover -s tests
+fanqie-lab open-source-check
+```
+
+Windows:
+
+```powershell
+python -c "import pathlib, py_compile; [py_compile.compile(str(p), doraise=True) for p in pathlib.Path('src').rglob('*.py')]"
 python -m unittest discover -s tests
 fanqie-lab open-source-check
 ```

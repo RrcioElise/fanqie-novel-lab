@@ -2,8 +2,19 @@
 
 ## Before GitHub Upload
 
+macOS / Linux:
+
 ```bash
 python -m py_compile $(find src -name '*.py')
+python -m unittest discover -s tests
+fanqie-lab open-source-check
+git add -n .
+```
+
+Windows:
+
+```powershell
+python -c "import pathlib, py_compile; [py_compile.compile(str(p), doraise=True) for p in pathlib.Path('src').rglob('*.py')]"
 python -m unittest discover -s tests
 fanqie-lab open-source-check
 git add -n .
@@ -42,7 +53,7 @@ git add .
 git status
 git commit -m "Initial open-source release"
 git branch -M main
-git remote add origin https://github.com/<your-name>/fanqie-novel-lab.git
+git remote add origin https://github.com/RrcioElise/fanqie-novel-lab.git
 git push -u origin main
 ```
 
