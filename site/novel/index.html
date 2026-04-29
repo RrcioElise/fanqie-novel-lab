@@ -68,7 +68,7 @@
     .hero-grid { display: grid; grid-template-columns: 1fr; gap: 34px; align-items: start; }
     .hero-copy { max-width: 920px; }
     .kicker { color: var(--accent); font-size: 12px; letter-spacing: .18em; text-transform: uppercase; font-weight: 950; }
-    h1 { margin: 12px 0 16px; font-size: clamp(48px, 6.7vw, 82px); line-height: .92; letter-spacing: -.085em; }
+    h1 { margin: 12px 0 16px; max-width: 900px; font-size: clamp(48px, 6.7vw, 82px); line-height: .96; letter-spacing: -.075em; text-wrap: balance; word-break: keep-all; }
     .lead { color: var(--muted); font-size: 18px; line-height: 1.78; max-width: 680px; margin: 0; }
     .hero-actions { display: flex; flex-wrap: wrap; gap: 11px; margin-top: 28px; }
     .mini-note { margin-top: 18px; color: #7b615c; font-weight: 760; font-size: 13px; line-height: 1.7; }
@@ -101,9 +101,12 @@
     .dot { width: 10px; height: 10px; border-radius: 99px; background: #ff5f57; box-shadow: 17px 0 #ffbd2e, 34px 0 #28c840; }
     .screen-img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: contain; object-position: center center; border-radius: 22px; border: 1px solid #ded6cb; background: #f6f3ed; }
     .section { padding: 58px 0; border-top: 1px solid rgba(214,203,189,.72); }
-    .section-head { display:flex; align-items:end; justify-content:space-between; gap:22px; margin-bottom:24px; }
-    .section h2 { margin: 8px 0 0; font-size: clamp(32px, 4vw, 52px); line-height: 1; letter-spacing: -.07em; }
-    .section-desc { max-width: 560px; color: var(--muted); line-height: 1.72; margin: 0; }
+    .section-head { display:flex; align-items:flex-start; justify-content:space-between; gap:28px; margin-bottom:24px; }
+    .section h2 { margin: 8px 0 0; max-width: 820px; font-size: clamp(32px, 4vw, 52px); line-height: 1.08; letter-spacing: -.052em; text-wrap: balance; word-break: keep-all; }
+    .section-desc { max-width: 480px; color: var(--muted); line-height: 1.72; margin: 0; }
+    .product-preview-section .section-head { display:block; margin-bottom: 20px; }
+    .product-preview-section .section-desc { max-width: 720px; margin-top: 12px; }
+    .product-preview-section h2 { max-width: none; }
     .shot-feature { display:grid; grid-template-columns: 1fr; gap: 18px; align-items: stretch; }
     .shot-card, .feature-card, .step, .download-panel {
       border: 1px solid var(--line);
@@ -112,6 +115,40 @@
       overflow: hidden;
     }
     .shot-card.main { box-shadow: 0 24px 70px rgba(21,23,29,.12); }
+    .preview-shell {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.74);
+      border-radius: 30px;
+      padding: 10px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .preview-stage { display: block; padding: 12px; background: #f6f3ed; }
+    .screen-frame { position: relative; overflow: hidden; border-radius: 22px; }
+    .screen-frame .screen-img { pointer-events: none; }
+    .hot-tab {
+      position: absolute;
+      top: 9.35%;
+      left: var(--x);
+      width: var(--w);
+      height: 3.65%;
+      appearance: none;
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      color: transparent;
+      cursor: pointer;
+      z-index: 2;
+      transition: background .18s ease, outline-color .18s ease;
+    }
+    .hot-tab:hover,
+    .hot-tab:focus-visible {
+      outline: 2px solid rgba(239, 62, 46, .32);
+      outline-offset: 2px;
+      background: rgba(239, 62, 46, .08);
+    }
+    .hot-tab.active { cursor: default; }
+
     .shot-caption { padding: 16px 18px 18px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
     .shot-caption b { font-size: 17px; letter-spacing: -.035em; }
     .shot-caption span { color: var(--muted); font-size: 13px; font-weight: 760; }
@@ -168,7 +205,7 @@
         <span>Fanqie Novel Lab<span class="brand-sub">Local AI Fiction Studio</span></span>
       </a>
       <nav class="navlinks" aria-label="页面导航">
-        <a class="chip" href="#screens">软件截图</a>
+        <a class="chip" href="#screens">产品预览</a>
         <a class="chip" href="#workflow">功能</a>
         <a class="chip" href="https://github.com/RrcioElise/fanqie-novel-lab">GitHub</a>
         <a class="btn primary" href="https://github.com/RrcioElise/fanqie-novel-lab/releases/tag/v0.2.0">下载 v0.2.0</a>
@@ -181,46 +218,49 @@
       <div class="hero-grid">
         <div class="hero-copy">
           <div class="kicker">Desktop · Open Source · Multi Model</div>
-          <h1>本地 AI 小说创作工作台。</h1>
+          <h1>本地 AI 小说创作工作台</h1>
           <p class="lead">从公开元数据观察、题材 Brief、大纲生成、人工润色、原创避撞，到章节正文、章节审核和发布包管理，都收进一个桌面客户端。</p>
           <div class="hero-actions">
             <a class="btn primary" href="https://github.com/RrcioElise/fanqie-novel-lab/releases/download/v0.2.0/fanqie-novel-lab-v0.2.0-windows.zip">Windows 下载</a>
             <a class="btn accent" href="https://github.com/RrcioElise/fanqie-novel-lab/releases/download/v0.2.0/fanqie-novel-lab-v0.2.0-macos.zip">macOS 下载</a>
             <a class="btn" href="https://github.com/RrcioElise/fanqie-novel-lab">查看源码</a>
           </div>
-          <div class="mini-note">介绍页只提供软件展示和下载入口；创作、模型密钥和作品数据都保存在你的本机。</div>
+          <div class="mini-note">本地运行，作品、模型配置和数据库留在你的电脑；支持多模型与桌面端工作流。</div>
           <div class="metrics" aria-label="软件亮点">
-            <div class="metric"><strong>1920×1080</strong><span>实机界面截图</span></div>
+            <div class="metric"><strong>本地运行</strong><span>作品数据留在本机</span></div>
             <div class="metric"><strong>Win / macOS</strong><span>桌面客户端脚本</span></div>
             <div class="metric"><strong>MIT</strong><span>开源许可</span></div>
           </div>
         </div>
-        <a class="screen-shell" href="assets/screenshot-workbench.png" aria-label="查看工作台高清截图">
-          <div class="window-bar"><span class="dots"><span class="dot"></span></span><span>工作台 · 1920×1080</span></div>
-          <img class="screen-img" src="assets/screenshot-workbench.jpg" width="1920" height="1080" alt="Fanqie Novel Lab 工作台界面截图" />
-        </a>
       </div>
     </section>
 
-    <section id="screens" class="section">
+    <section id="screens" class="section product-preview-section">
       <div class="section-head">
         <div>
-          <div class="kicker">Screenshots</div>
-          <h2>真实客户端界面。</h2>
+          <div class="kicker">产品预览</div>
+          <h2>完整创作流程，一屏预览</h2>
         </div>
-        <p class="section-desc">截图来自本地桌面视口 1920×1080，页面按 16:9 等比完整展示，不裁切、不做竖向挤压。点击图片可查看高清原图。</p>
+        <p class="section-desc">在一个预览框内浏览核心工作区，展示从数据到发布的完整链路。</p>
       </div>
-      <div class="shot-feature">
-        <a class="shot-card main" href="assets/screenshot-outline.png" aria-label="查看大纲画布高清截图">
-          <img class="screen-img" src="assets/screenshot-outline.jpg" width="1920" height="1080" alt="题材与大纲页面截图" />
-          <div class="shot-caption"><b>题材与大纲</b><span>Brief、画布、历史版本集中处理</span></div>
-        </a>
-        <div class="shot-list">
-          <a class="mini-shot" href="assets/screenshot-data.png"><img src="assets/screenshot-data.jpg" width="1920" height="1080" alt="数据花园页面截图" /><span><b>数据花园</b>采集、导入和查看公开元数据。</span></a>
-          <a class="mini-shot" href="assets/screenshot-chapter.png"><img src="assets/screenshot-chapter.jpg" width="1920" height="1080" alt="章节工坊页面截图" /><span><b>章节工坊</b>分批生成、编辑、审核正文。</span></a>
-          <a class="mini-shot" href="assets/screenshot-publish.png"><img src="assets/screenshot-publish.jpg" width="1920" height="1080" alt="发布中心页面截图" /><span><b>发布中心</b>作品档案、上传包和队列管理。</span></a>
-          <a class="mini-shot" href="assets/screenshot-settings.png"><img src="assets/screenshot-settings.jpg" width="1920" height="1080" alt="项目设置页面截图" /><span><b>模型设置</b>Claude CLI、中转站、本地模型一处切换。</span></a>
+
+      <div class="preview-shell" aria-label="Fanqie Novel Lab 产品预览">
+        <div class="window-bar"><span class="dots"><span class="dot"></span></span><span id="shot-window-title">工作台</span></div>
+        <div class="preview-stage">
+          <div class="screen-frame" role="tablist" aria-label="产品模块预览切换">
+            <img id="product-shot" class="screen-img" src="assets/screenshot-workbench.jpg" width="1920" height="1080" alt="Fanqie Novel Lab 工作台预览" />
+            <button class="hot-tab active" type="button" data-shot="workbench" role="tab" aria-selected="true" aria-label="切换到工作台预览" style="--x:17.4%;--w:3.7%;">工作台</button>
+            <button class="hot-tab" type="button" data-shot="data" role="tab" aria-selected="false" aria-label="切换到数据预览" style="--x:21.4%;--w:2.9%;">数据</button>
+            <button class="hot-tab" type="button" data-shot="outline" role="tab" aria-selected="false" aria-label="切换到大纲预览" style="--x:24.7%;--w:2.9%;">大纲</button>
+            <button class="hot-tab" type="button" data-shot="review" role="tab" aria-selected="false" aria-label="切换到润色预览" style="--x:28.0%;--w:2.9%;">润色</button>
+            <button class="hot-tab" type="button" data-shot="collision" role="tab" aria-selected="false" aria-label="切换到避撞预览" style="--x:31.2%;--w:2.9%;">避撞</button>
+            <button class="hot-tab" type="button" data-shot="chapter" role="tab" aria-selected="false" aria-label="切换到章节预览" style="--x:34.5%;--w:2.9%;">章节</button>
+            <button class="hot-tab" type="button" data-shot="publish" role="tab" aria-selected="false" aria-label="切换到发布预览" style="--x:37.8%;--w:2.9%;">发布</button>
+            <button class="hot-tab" type="button" data-shot="export" role="tab" aria-selected="false" aria-label="切换到导出预览" style="--x:41.1%;--w:2.8%;">导出</button>
+            <button class="hot-tab" type="button" data-shot="settings" role="tab" aria-selected="false" aria-label="切换到项目设置预览" style="--x:44.3%;--w:4.4%;">项目设置</button>
+          </div>
         </div>
+        <div class="shot-caption"><b id="shot-title">工作台</b><span id="shot-desc">从题材、样本、大纲、正文到交付，按创作流程推进。</span></div>
       </div>
     </section>
 
@@ -228,9 +268,9 @@
       <div class="section-head">
         <div>
           <div class="kicker">Workflow</div>
-          <h2>按创作流程组织。</h2>
+          <h2>按流程组织，每一步都可回看</h2>
         </div>
-        <p class="section-desc">不是简单聊天框，而是把写网文常用的决策、审稿、修改和交付动作拆成稳定模块。</p>
+        <p class="section-desc">大纲、正文、审核、模型和发布材料围绕同一个项目档案展开。</p>
       </div>
       <div class="feature-grid">
         <div class="feature-card"><div class="icon">🍅</div><b>公开元数据观察</b><p>维护本地样本库，用于题材趋势、关键词和避撞对比，不把正文采集进来。</p></div>
@@ -246,9 +286,9 @@
       <div class="section-head">
         <div>
           <div class="kicker">Install</div>
-          <h2>下载后本地启动。</h2>
+          <h2>下载后本地启动</h2>
         </div>
-        <p class="section-desc">当前版本是 v0.2.0 预览版，适合本地试用、二次开发和开源共建。</p>
+        <p class="section-desc">下载 v0.2.0，配置模型后即可在本机开始创作。</p>
       </div>
       <div class="steps">
         <div class="step"><div class="step-no">1</div><b>安装基础环境</b><p>安装 Python 3.10+；桌面客户端需要 Node.js LTS。</p></div>
@@ -261,7 +301,7 @@
       <div class="download-panel">
         <div>
           <div class="kicker">Release v0.2.0</div>
-          <h2 style="margin:8px 0 0;color:#fff;">获取桌面版与源码。</h2>
+          <h2 style="margin:8px 0 0;color:#fff;">获取桌面版与源码</h2>
           <p>发布包在 GitHub Release；源码、文档、Windows 说明和安全策略都已放在仓库中。</p>
         </div>
         <div class="download-actions">
@@ -276,5 +316,93 @@
       Fanqie Novel Lab · Open-source local AI fiction studio · <a href="https://github.com/RrcioElise/fanqie-novel-lab/blob/main/LICENSE">MIT License</a>
     </footer>
   </main>
+
+  <script>
+    const shots = {
+      workbench: {
+        title: '工作台',
+        desc: '从题材、样本、大纲、正文到交付，按创作流程推进。',
+        jpg: 'assets/screenshot-workbench.jpg',
+        png: 'assets/screenshot-workbench.png',
+        alt: 'Fanqie Novel Lab 工作台预览'
+      },
+      data: {
+        title: '数据花园',
+        desc: '采集、导入和整理公开元数据，为题材趋势和避撞审查提供样本。',
+        jpg: 'assets/screenshot-data.jpg',
+        png: 'assets/screenshot-data.png',
+        alt: 'Fanqie Novel Lab 数据花园预览'
+      },
+      outline: {
+        title: '题材与大纲',
+        desc: '设置题材、读者、钩子和约束，生成可审核的大纲画布。',
+        jpg: 'assets/screenshot-outline.jpg',
+        png: 'assets/screenshot-outline.png',
+        alt: 'Fanqie Novel Lab 大纲页面预览'
+      },
+      review: {
+        title: '人审润色',
+        desc: '按主编视角打分、写批注，再把修改意见转成可执行润色方向。',
+        jpg: 'assets/screenshot-review.jpg',
+        png: 'assets/screenshot-review.png',
+        alt: 'Fanqie Novel Lab 润色页面预览'
+      },
+      collision: {
+        title: '避撞审查',
+        desc: '对照本地样本检查相似钩子、设定和高风险卖点。',
+        jpg: 'assets/screenshot-collision.jpg',
+        png: 'assets/screenshot-collision.png',
+        alt: 'Fanqie Novel Lab 避撞审查页面预览'
+      },
+      chapter: {
+        title: '章节工坊',
+        desc: '分批生成正文，支持编辑、润色、AI味检测、伏笔台账和反转审查。',
+        jpg: 'assets/screenshot-chapter.jpg',
+        png: 'assets/screenshot-chapter.png',
+        alt: 'Fanqie Novel Lab 章节工坊预览'
+      },
+      publish: {
+        title: '发布中心',
+        desc: '管理作品档案、上传包、发布队列和发布自动化清单。',
+        jpg: 'assets/screenshot-publish.jpg',
+        png: 'assets/screenshot-publish.png',
+        alt: 'Fanqie Novel Lab 发布中心预览'
+      },
+      export: {
+        title: '交付与开源',
+        desc: '整理大纲、章节、报告和开源材料，形成可交付资产。',
+        jpg: 'assets/screenshot-export.jpg',
+        png: 'assets/screenshot-export.png',
+        alt: 'Fanqie Novel Lab 导出页面预览'
+      },
+      settings: {
+        title: '项目设置',
+        desc: '配置 Claude CLI、OpenAI-compatible 中转、本地模型和创作约束。',
+        jpg: 'assets/screenshot-settings.jpg',
+        png: 'assets/screenshot-settings.png',
+        alt: 'Fanqie Novel Lab 项目设置预览'
+      }
+    };
+    const img = document.getElementById('product-shot');
+    const title = document.getElementById('shot-title');
+    const desc = document.getElementById('shot-desc');
+    const winTitle = document.getElementById('shot-window-title');
+    document.querySelectorAll('.hot-tab').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const key = tab.dataset.shot;
+        const shot = shots[key];
+        if (!shot) return;
+        document.querySelectorAll('.hot-tab').forEach((node) => {
+          node.classList.toggle('active', node === tab);
+          node.setAttribute('aria-selected', node === tab ? 'true' : 'false');
+        });
+        img.src = shot.jpg;
+        img.alt = shot.alt;
+        title.textContent = shot.title;
+        desc.textContent = shot.desc;
+        winTitle.textContent = shot.title;
+      });
+    });
+  </script>
 </body>
 </html>
