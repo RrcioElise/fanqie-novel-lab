@@ -64,8 +64,9 @@
     }
     .btn.primary { background: var(--dark); border-color: var(--dark); color: #fff; box-shadow: 0 16px 34px rgba(21,23,29,.20); }
     .btn.accent { background: var(--accent-2); border-color: #ffd4ca; color: #b92b1d; }
-    .hero { padding: 76px 0 28px; }
-    .hero-grid { display: grid; grid-template-columns: minmax(0, .92fr) minmax(520px, 1.08fr); gap: 42px; align-items: center; }
+    .hero { padding: 70px 0 28px; }
+    .hero-grid { display: grid; grid-template-columns: 1fr; gap: 34px; align-items: start; }
+    .hero-copy { max-width: 920px; }
     .kicker { color: var(--accent); font-size: 12px; letter-spacing: .18em; text-transform: uppercase; font-weight: 950; }
     h1 { margin: 12px 0 16px; font-size: clamp(48px, 6.7vw, 82px); line-height: .92; letter-spacing: -.085em; }
     .lead { color: var(--muted); font-size: 18px; line-height: 1.78; max-width: 680px; margin: 0; }
@@ -82,7 +83,9 @@
       background: linear-gradient(135deg, rgba(255,255,255,.88), rgba(255,255,255,.45));
       border: 1px solid rgba(230, 222, 210, .88);
       box-shadow: var(--shadow);
-      transform: rotate(.5deg);
+      display: block;
+      width: 100%;
+      transform: none;
     }
     .screen-shell:before {
       content: "";
@@ -96,12 +99,12 @@
     .window-bar { display:flex; align-items:center; justify-content:space-between; padding: 10px 13px 12px; color: var(--muted); font-size: 12px; font-weight: 840; }
     .dots { display:flex; gap:7px; }
     .dot { width: 10px; height: 10px; border-radius: 99px; background: #ff5f57; box-shadow: 17px 0 #ffbd2e, 34px 0 #28c840; }
-    .screen-img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; object-position: top center; border-radius: 22px; border: 1px solid #ded6cb; background: #ebe7df; }
+    .screen-img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: contain; object-position: center center; border-radius: 22px; border: 1px solid #ded6cb; background: #f6f3ed; }
     .section { padding: 58px 0; border-top: 1px solid rgba(214,203,189,.72); }
     .section-head { display:flex; align-items:end; justify-content:space-between; gap:22px; margin-bottom:24px; }
     .section h2 { margin: 8px 0 0; font-size: clamp(32px, 4vw, 52px); line-height: 1; letter-spacing: -.07em; }
     .section-desc { max-width: 560px; color: var(--muted); line-height: 1.72; margin: 0; }
-    .shot-feature { display:grid; grid-template-columns: minmax(0,1.15fr) minmax(280px,.85fr); gap: 18px; align-items: stretch; }
+    .shot-feature { display:grid; grid-template-columns: 1fr; gap: 18px; align-items: stretch; }
     .shot-card, .feature-card, .step, .download-panel {
       border: 1px solid var(--line);
       background: rgba(255,255,255,.68);
@@ -112,11 +115,11 @@
     .shot-caption { padding: 16px 18px 18px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
     .shot-caption b { font-size: 17px; letter-spacing: -.035em; }
     .shot-caption span { color: var(--muted); font-size: 13px; font-weight: 760; }
-    .shot-list { display:grid; grid-template-columns: 1fr; gap: 12px; }
-    .mini-shot { display:grid; grid-template-columns: 150px minmax(0,1fr); gap: 12px; padding: 10px; border: 1px solid var(--line); background: rgba(255,255,255,.68); border-radius: 20px; text-decoration:none; transition: transform .18s ease, border-color .18s ease; }
+    .shot-list { display:grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+    .mini-shot { display:grid; grid-template-columns: 1fr; gap: 12px; padding: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.68); border-radius: 22px; text-decoration:none; transition: transform .18s ease, border-color .18s ease; }
     .mini-shot:hover { transform: translateY(-2px); border-color: #f1b9ad; }
-    .mini-shot img { width: 150px; aspect-ratio: 16/9; object-fit: cover; object-position: top center; border-radius: 14px; border: 1px solid var(--line); }
-    .mini-shot b { display:block; margin: 7px 0 5px; letter-spacing: -.035em; }
+    .mini-shot img { display:block; width: 100%; height:auto; aspect-ratio: 16/9; object-fit: contain; object-position: center center; border-radius: 16px; border: 1px solid var(--line); background:#f6f3ed; }
+    .mini-shot b { display:block; margin: 2px 0 5px; letter-spacing: -.035em; }
     .mini-shot span { color: var(--muted); font-size: 13px; line-height: 1.55; }
     .feature-grid { display:grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; }
     .feature-card { padding: 20px; min-height: 188px; }
@@ -151,8 +154,8 @@
       h1 { font-size: 46px; }
       .lead { font-size: 16px; }
       .metrics { grid-template-columns: 1fr; }
+      .shot-list { grid-template-columns: 1fr; }
       .mini-shot { grid-template-columns: 1fr; }
-      .mini-shot img { width: 100%; }
       .shot-caption { align-items:flex-start; flex-direction:column; }
     }
   </style>
@@ -176,7 +179,7 @@
   <main id="top" class="wrap">
     <section class="hero">
       <div class="hero-grid">
-        <div>
+        <div class="hero-copy">
           <div class="kicker">Desktop · Open Source · Multi Model</div>
           <h1>本地 AI 小说创作工作台。</h1>
           <p class="lead">从公开元数据观察、题材 Brief、大纲生成、人工润色、原创避撞，到章节正文、章节审核和发布包管理，都收进一个桌面客户端。</p>
@@ -205,7 +208,7 @@
           <div class="kicker">Screenshots</div>
           <h2>真实客户端界面。</h2>
         </div>
-        <p class="section-desc">截图来自本地桌面视口 1920×1080，不再使用被挤压的移动端视图。点击图片可查看高清原图。</p>
+        <p class="section-desc">截图来自本地桌面视口 1920×1080，页面按 16:9 等比完整展示，不裁切、不做竖向挤压。点击图片可查看高清原图。</p>
       </div>
       <div class="shot-feature">
         <a class="shot-card main" href="assets/screenshot-outline.png" aria-label="查看大纲画布高清截图">
