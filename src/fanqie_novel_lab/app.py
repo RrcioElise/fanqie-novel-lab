@@ -50,12 +50,15 @@ from fanqie_novel_lab.services.publisher import (
     FANQIE_WRITER_ZONE_URL,
     PublishPackage,
     WorkProfile,
+    build_publish_automation_manifest,
     list_publish_packages,
     list_work_profiles,
     package_from_chapter,
     package_to_markdown,
     package_to_txt,
+    publish_gate_summary,
     safe_name,
+    save_publish_automation_manifest,
     save_publish_package,
     save_work_profile,
     update_package_status,
@@ -73,6 +76,13 @@ from fanqie_novel_lab.services.open_source_readiness import (
     readiness_rows,
     readiness_summary,
     scan_open_source_readiness,
+)
+from fanqie_novel_lab.services.quality_control import (
+    ChapterQualityReport,
+    inspect_chapter_quality,
+    list_quality_report_files,
+    quality_to_markdown,
+    save_quality_report,
 )
 from fanqie_novel_lab.services.similarity_guard import check_outline_similarity
 from fanqie_novel_lab.services.trend_analyzer import analyze_trends
@@ -98,6 +108,9 @@ POLISH_MODES = [
     "原创防撞",
     "卷纲连载性",
     "标题与卖点",
+    "去AI味文本纹理",
+    "有迹可循反转",
+    "章末钩子多样化",
 ]
 
 THEME_CSS = """
@@ -543,7 +556,20 @@ def load_outline_from_path(path: Path) -> NovelOutline:
 
 
 def active_skill_ids() -> list[str]:
-    return st.session_state.get("selected_writing_skill_ids", DEFAULT_WRITING_SKILL_IDS)
+    ids = list(st.session_state.get("selected_writing_skill_ids", DEFAULT_WRITING_SKILL_IDS))
+    # v0.1.x 运行中的 Streamlit 会话可能已经保存了旧的默认约束。
+    # 用户要求新增“降低 AI 味 / 有迹可循反转 / 更多钩子”后，自动补入一次，
+    # 但仍允许在“项目设置 → 创作约束”里手动取消。
+    if not st.session_state.get("writing_skill_defaults_migrated_20260429"):
+        changed = False
+        for skill_id in ["anti_ai_voice_texture", "foreshadowed_reversal", "hook_bank_diversity"]:
+            if skill_id not in ids:
+                ids.append(skill_id)
+                changed = True
+        st.session_state["writing_skill_defaults_migrated_20260429"] = True
+        if changed:
+            st.session_state["selected_writing_skill_ids"] = ids
+    return ids
 
 
 def active_skill_constraints(scope: str) -> str:
@@ -1670,7 +1696,17 @@ def render_outline_page() -> None:
             for item in current.first_10_chapters[:5]:
                 no = str(item.get("chapter") or item.get("章节") or "-")
                 title = str(item.get("title") or item.get("标题") or "未命名")
-                goal = clip_text(str(item.get("goal") or item.get("目标") or item.get("conflict") or ""), 72)
+                goal = clip_text(
+                    str(
+                        item.get("goal")
+                        or item.get("目标")
+                        or item.get("conflict")
+                        or item.get("twist")
+                        or item.get("hook_type")
+                        or ""
+                    ),
+                    72,
+                )
                 mini_rows.append(f'<div class="outline-mini-row"><div class="outline-mini-no">{ui_escape(no)}</div><div><div class="outline-mini-title">{ui_escape(title)}</div><div class="outline-mini-desc">{ui_escape(goal)}</div></div></div>')
             st.markdown('<div class="outline-mini-list">' + "".join(mini_rows) + '</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
@@ -1986,7 +2022,16 @@ def render_chapter_page() -> None:
             section_intro("PLAN", "章节计划与成稿", "计划来自当前大纲；成稿保存后会进入章节库。")
             plans = [chapter_plan_from_outline(outline, int(start_chapter) + i) for i in range(int(chapter_count))]
             plan_rows = [
-                {"章节": p.get("chapter"), "标题": p.get("title"), "目标": p.get("goal"), "冲突": p.get("conflict"), "钩子": p.get("ending_hook")}
+                {
+                    "章节": p.get("chapter"),
+                    "标题": p.get("title"),
+                    "目标": p.get("goal"),
+                    "冲突": p.get("conflict"),
+                    "反转": p.get("twist"),
+                    "钩子类型": p.get("hook_type"),
+                    "伏笔": p.get("foreshadowing"),
+                    "钩子": p.get("ending_hook"),
+                }
                 for p in plans
             ]
             st.dataframe(plan_rows, width="stretch", hide_index=True)
@@ -2101,7 +2146,7 @@ def render_chapter_page() -> None:
             nav_button("outline", "去加载大纲", "✍️", key="nav_audit_to_outline")
         else:
             st.markdown('<div class="editor-section">', unsafe_allow_html=True)
-            section_intro("AUDIT", "章节对照审核", "检查本章是否跑题、是否兑现计划。")
+            section_intro("AUDIT", "章节对照审核", "检查跑题、AI味、伏笔台账和反转是否有迹可循。")
             audit_source = st.segmented_control(
                 "审核来源",
                 ["当前章节", "本轮生成", "章节文件"],
@@ -2143,12 +2188,20 @@ def render_chapter_page() -> None:
             else:
                 empty_state("没有可审核章节", "先生成、加载或选择一个章节。")
 
-            if st.button("开始章节审核", type="primary", width="stretch", disabled=audit_chapter is None, key="run_chapter_audit"):
+            if st.button("开始章节审核与质检", type="primary", width="stretch", disabled=audit_chapter is None, key="run_chapter_audit"):
                 audit = audit_chapter_against_outline(outline, audit_chapter)  # type: ignore[arg-type]
                 json_path, md_path = save_chapter_audit(audit)
+                quality = inspect_chapter_quality(outline, audit_chapter)  # type: ignore[arg-type]
+                quality_json_path, quality_md_path = save_quality_report(quality)
                 st.session_state["chapter_audit"] = audit.model_dump()
-                st.session_state["chapter_audit_paths"] = {"json": str(json_path), "md": str(md_path)}
-                st.success(f"审核完成：{audit.verdict} · {audit.score} 分")
+                st.session_state["chapter_quality_report"] = quality.model_dump()
+                st.session_state["chapter_audit_paths"] = {
+                    "json": str(json_path),
+                    "md": str(md_path),
+                    "quality_json": str(quality_json_path),
+                    "quality_md": str(quality_md_path),
+                }
+                st.success(f"审核完成：{audit.verdict} · {audit.score} 分｜质检 {quality.overall_score} 分")
             st.markdown('</div>', unsafe_allow_html=True)
 
             st.markdown('<div class="editor-section">', unsafe_allow_html=True)
@@ -2162,17 +2215,22 @@ def render_chapter_page() -> None:
                     from fanqie_novel_lab.services.chapter_reviewer import ChapterAudit
 
                     audit = ChapterAudit(**audit_data)
+                quality_data = st.session_state.get("chapter_quality_report")
+                quality = None
+                if quality_data:
+                    quality = quality_data if hasattr(quality_data, "model_dump") else ChapterQualityReport(**quality_data)
                 stat_strip(
                     [
                         ("结论", audit.verdict, "章节质量"),
                         ("分数", str(audit.score), "满分 100"),
+                        ("质检", str(quality.overall_score) if quality else "未生成", "AI/伏笔/反转"),
                         ("命中", str(len(audit.matched_plan_keywords)), "计划关键词"),
                         ("缺失", str(len(audit.missing_plan_keywords)), "待补关键词"),
                     ]
                 )
                 st.markdown(f"<div class='soft-note'>{ui_escape(audit.summary)}</div>", unsafe_allow_html=True)
                 st.dataframe(audit.checks, width="stretch", hide_index=True)
-                audit_tab_advice, audit_tab_missing = st.tabs(["修改建议", "缺失关键词"])
+                audit_tab_advice, audit_tab_missing, audit_tab_ai, audit_tab_ledger, audit_tab_reversal = st.tabs(["修改建议", "缺失关键词", "AI味", "伏笔台账", "反转审查"])
                 with audit_tab_advice:
                     if audit.revision_advice:
                         for item in audit.revision_advice:
@@ -2181,17 +2239,66 @@ def render_chapter_page() -> None:
                         st.caption("暂无明显问题。")
                 with audit_tab_missing:
                     st.write("、".join(audit.missing_plan_keywords[:20]) or "无")
+                with audit_tab_ai:
+                    if quality:
+                        st.markdown(f"**{quality.ai_voice.verdict} · {quality.ai_voice.score}/100**")
+                        if quality.ai_voice.metrics:
+                            st.dataframe(quality.ai_voice.metrics, width="stretch", hide_index=True)
+                        if quality.ai_voice.issues:
+                            st.dataframe(quality.ai_voice.issues, width="stretch", hide_index=True)
+                        else:
+                            st.success("未发现明显 AI 味问题。")
+                        if quality.ai_voice.suggestions:
+                            st.markdown("##### 去AI味建议")
+                            for item in quality.ai_voice.suggestions:
+                                st.markdown(f"- {item}")
+                    else:
+                        st.caption("旧审核没有质检报告，请重新点击“开始章节审核与质检”。")
+                with audit_tab_ledger:
+                    if quality:
+                        rows = [x.model_dump() for x in quality.foreshadow_ledger]
+                        if rows:
+                            st.dataframe(rows, width="stretch", hide_index=True)
+                        else:
+                            empty_state("暂无伏笔台账", "本章没有检测到可回收伏笔，建议补一个物件、证据或信息差。")
+                    else:
+                        st.caption("旧审核没有伏笔台账，请重新质检。")
+                with audit_tab_reversal:
+                    if quality:
+                        st.markdown(f"**{quality.reversal_review.verdict} · {quality.reversal_review.score}/100**")
+                        st.markdown(
+                            f"<div class='soft-note'>反转：{ui_escape(quality.reversal_review.twist or '未标注')}<br>伏笔：{ui_escape(quality.reversal_review.foreshadowing or '未标注')}<br>逻辑：{ui_escape(quality.reversal_review.reversal_logic or '未标注')}</div>",
+                            unsafe_allow_html=True,
+                        )
+                        st.dataframe(quality.reversal_review.checks, width="stretch", hide_index=True)
+                        if quality.reversal_review.suggestions:
+                            st.markdown("##### 修复建议")
+                            for item in quality.reversal_review.suggestions:
+                                st.markdown(f"- {item}")
+                    else:
+                        st.caption("旧审核没有反转审查，请重新质检。")
                 md = audit_to_markdown(audit)
                 st.download_button("下载章节审核报告", data=md, file_name=f"chapter_{audit.chapter_no}_audit.md", mime="text/markdown", width="stretch")
+                if quality:
+                    qmd = quality_to_markdown(quality)
+                    st.download_button("下载章节质检报告", data=qmd, file_name=f"chapter_{quality.chapter_no}_quality.md", mime="text/markdown", width="stretch")
             st.markdown('</div>', unsafe_allow_html=True)
 
             st.markdown('<div class="editor-section">', unsafe_allow_html=True)
             section_intro("HISTORY", "历史审核", "最近的单章审核报告。")
-            rows = file_table(list_chapter_audit_files(), 20)
-            if rows:
-                st.dataframe(rows, width="stretch", hide_index=True)
-            else:
-                st.caption("暂无历史审核。")
+            hist_audit, hist_quality = st.tabs(["对纲审核", "质检报告"])
+            with hist_audit:
+                rows = file_table(list_chapter_audit_files(), 20)
+                if rows:
+                    st.dataframe(rows, width="stretch", hide_index=True)
+                else:
+                    st.caption("暂无历史审核。")
+            with hist_quality:
+                rows = file_table(list_quality_report_files(), 20)
+                if rows:
+                    st.dataframe(rows, width="stretch", hide_index=True)
+                else:
+                    st.caption("暂无历史质检。")
             st.markdown('</div>', unsafe_allow_html=True)
 
     with tab_library:
@@ -2227,7 +2334,7 @@ def render_publish_page() -> None:
         ]
     )
 
-    tab_work, tab_upload, tab_queue, tab_assist = st.tabs(["作品", "上传包", "队列", "作家助手"])
+    tab_work, tab_upload, tab_queue, tab_auto, tab_assist = st.tabs(["作品", "上传包", "队列", "自动化", "作家助手"])
 
     with tab_work:
         st.markdown('<div class="editor-section">', unsafe_allow_html=True)
@@ -2317,6 +2424,13 @@ def render_publish_page() -> None:
                 st.warning("暂无章节文件。")
         min_words = st.number_input("最低建议字数", 300, 6000, 1000, 100, key="publish_min_words", help="低于该字数会在上传包检查中标记为风险，不会阻止导出。")
         max_words = st.number_input("最高建议字数", 1000, 15000, 8000, 500, key="publish_max_words", help="高于该字数会提示拆章或删改。")
+        author_note = st.text_area(
+            "作者有话说（可选）",
+            value="",
+            placeholder="可填章末说明、求追读、更新时间等；不填则上传包不包含。",
+            height=90,
+            key="publish_author_note",
+        )
         if source_chapter:
             info_card(
                 f"第 {source_chapter.chapter_no} 章 · {source_chapter.title}",
@@ -2327,6 +2441,7 @@ def render_publish_page() -> None:
             empty_state("没有可打包章节", "先在章节工坊生成正文，或从章节文件中选择一个 JSON。")
         if st.button("一键生成上传包", type="primary", width="stretch", disabled=source_chapter is None, key="make_publish_pack"):
             pkg = package_from_chapter(source_chapter, picked_work, source_path)  # type: ignore[arg-type]
+            pkg.author_note = author_note.strip()
             pkg.preflight = validate_publish_package(pkg, min_words=int(min_words), max_words=int(max_words))
             if outline and source_chapter:
                 audit = audit_chapter_against_outline(outline, source_chapter)
@@ -2343,8 +2458,9 @@ def render_publish_page() -> None:
                 )
                 st.session_state["chapter_audit"] = audit.model_dump()
             json_path, txt_path, md_path = save_publish_package(pkg)
+            manifest_path = save_publish_automation_manifest(pkg)
             st.session_state["publish_current_package"] = pkg.model_dump()
-            st.session_state["publish_current_paths"] = {"json": str(json_path), "txt": str(txt_path), "md": str(md_path)}
+            st.session_state["publish_current_paths"] = {"json": str(json_path), "txt": str(txt_path), "md": str(md_path), "manifest": str(manifest_path)}
             st.success(f"上传包已生成：{txt_path.name}")
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -2361,8 +2477,9 @@ def render_publish_page() -> None:
             st.download_button("下载后台 TXT", data=package_to_txt(pkg), file_name=f"第{pkg.chapter_no:03d}章_{safe_name(pkg.chapter_title)}.txt", mime="text/plain", width="stretch")
             st.download_button("下载审核 Markdown", data=package_to_markdown(pkg), file_name="publish_package.md", mime="text/markdown", width="stretch")
             st.download_button("下载结构化 JSON", data=json.dumps(pkg.model_dump(), ensure_ascii=False, indent=2), file_name="publish_package.json", mime="application/json", width="stretch")
-            st.text_input("后台章节标题", value=pkg.chapter_title, placeholder="复制到作家后台的章节标题", key="publish_preview_title")
-            st.text_area("后台正文", value=pkg.content, placeholder="复制到作家后台的正文；最终提交前仍建议人工读一遍", height=430, key="publish_preview_content")
+            st.text_input("后台章节标题", value=pkg.chapter_title, placeholder="复制到作家后台的章节标题", key=f"publish_preview_title_{pkg.id}")
+            st.text_area("后台正文", value=pkg.content, placeholder="复制到作家后台的正文；最终提交前仍建议人工读一遍", height=430, key=f"publish_preview_content_{pkg.id}")
+            st.text_area("作者有话说", value=pkg.author_note, placeholder="可复制到后台作者有话说；没有则留空", height=120, key=f"publish_preview_author_note_{pkg.id}")
             st.caption("复制标题和正文到番茄作家后台前，请再次确认作品、章节序号和正文内容。")
         else:
             empty_state("还没有上传包", "选择章节后点击“一键生成上传包”。")
@@ -2406,6 +2523,73 @@ def render_publish_page() -> None:
                 st.dataframe(checks, width="stretch", hide_index=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
+    with tab_auto:
+        st.markdown('<div class="editor-section">', unsafe_allow_html=True)
+        section_intro("AUTO", "发布自动化", "纯自动做到本地包和草稿清单；真正提交前保留人工确认。")
+        pkg_data = st.session_state.get("publish_current_package")
+        if not pkg_data:
+            empty_state("还没有可自动化的上传包", "先在“上传包”页生成一个章节上传包。")
+            st.markdown('</div>', unsafe_allow_html=True)
+        else:
+            pkg = PublishPackage(**pkg_data)
+            mode = st.segmented_control(
+                "自动化模式",
+                ["本地全自动", "草稿辅助", "人工最终发布"],
+                default="草稿辅助",
+                key="publish_auto_mode",
+                help="本地全自动：只生成文件和清单；草稿辅助：给浏览器助手填表用；人工最终发布：最后确认仍由作者完成。",
+            ) or "草稿辅助"
+            gates = publish_gate_summary(pkg)
+            blocked = any(row["状态"] == "阻断" for row in gates)
+            col_a, col_b, col_c = st.columns([1.1, 1, 1])
+            with col_a:
+                info_card("当前模式", mode, icon="⚙️")
+            with col_b:
+                info_card("门禁状态", "阻断" if blocked else "可进入草稿", icon="🧭")
+            with col_c:
+                info_card("章节字数", f"{pkg.length} 字", icon="📏")
+
+            st.markdown('</div>', unsafe_allow_html=True)
+
+            st.markdown('<div class="editor-section">', unsafe_allow_html=True)
+            section_intro("GATES", "发布前门禁", "先处理阻断项，再进入后台填稿。")
+            st.dataframe(gates, width="stretch", hide_index=True)
+            failed = [x for x in (pkg.preflight or validate_publish_package(pkg)) if not x.get("通过")]
+            if failed:
+                with st.expander("查看需要复核的检查项", expanded=True):
+                    st.dataframe(failed, width="stretch", hide_index=True)
+            else:
+                st.success("上传包基础检查通过。")
+            st.markdown('</div>', unsafe_allow_html=True)
+
+            st.markdown('<div class="editor-section">', unsafe_allow_html=True)
+            section_intro("DRAFT", "后台填稿材料", "用于打开后台后复制粘贴；保存草稿或最终发布前请再确认。")
+            st.link_button("打开番茄作家后台", FANQIE_WRITER_ZONE_URL, width="stretch")
+            st.text_input("作品", value=pkg.work_title or "未绑定作品", key=f"auto_work_title_{pkg.id}")
+            st.text_input("章节标题", value=pkg.chapter_title, key=f"auto_chapter_title_{pkg.id}")
+            st.text_area("正文", value=pkg.content, height=360, key=f"auto_chapter_content_{pkg.id}")
+            st.text_area("作者有话说", value=pkg.author_note, height=120, key=f"auto_author_note_{pkg.id}")
+            st.markdown('</div>', unsafe_allow_html=True)
+
+            st.markdown('<div class="editor-section">', unsafe_allow_html=True)
+            section_intro("MANIFEST", "浏览器助手清单", "如果后续接浏览器自动填表，就读取这份 JSON；清单会在最终发布前停止。")
+            manifest = build_publish_automation_manifest(pkg)
+            manifest["selected_mode"] = mode
+            manifest_text = json.dumps(manifest, ensure_ascii=False, indent=2)
+            if st.button("保存自动化清单到本地", type="primary", width="stretch", key="save_publish_manifest"):
+                path = save_publish_automation_manifest(pkg, manifest)
+                st.success(f"已保存：{path.name}")
+            st.download_button(
+                "下载发布自动化清单 JSON",
+                data=manifest_text,
+                file_name=f"fanqie_publish_manifest_第{pkg.chapter_no:03d}章.json",
+                mime="application/json",
+                width="stretch",
+            )
+            with st.expander("预览清单", expanded=False):
+                st.code(manifest_text, language="json")
+            st.markdown('</div>', unsafe_allow_html=True)
+
     with tab_assist:
         st.markdown('<div class="editor-section">', unsafe_allow_html=True)
         section_intro("FANQIE", "番茄作家助手", "打开后台，配合上传包使用。")
@@ -2418,41 +2602,6 @@ def render_publish_page() -> None:
             4. 粘贴标题和正文，最终提交前人工确认。
             """
         )
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        st.markdown('<div class="editor-section">', unsafe_allow_html=True)
-        section_intro("AUTOMATION", "自动化清单", "生成给浏览器助手使用的上传清单。")
-        st.markdown(
-            """
-            - ✅ 本地作品管理  
-            - ✅ 一键生成上传包  
-            - ✅ 提交前字数/格式/AI口吻检查  
-            - ✅ 发布队列状态跟踪  
-            - ⏸️ 浏览器填表助手：预留入口  
-            """
-        )
-        pkg_data = st.session_state.get("publish_current_package")
-        if pkg_data:
-            pkg = PublishPackage(**pkg_data)
-            automation_manifest = {
-                "platform": "番茄小说",
-                "writer_zone": FANQIE_WRITER_ZONE_URL,
-                "safety_mode": "manual_confirm_before_transmit",
-                "work_title": pkg.work_title,
-                "chapter_no": pkg.chapter_no,
-                "chapter_title": pkg.chapter_title,
-                "content_length": pkg.length,
-                "next_actions": ["open_writer_zone", "select_work", "paste_title", "paste_content", "stop_before_final_submit"],
-            }
-            st.download_button(
-                "下载自动化清单 JSON",
-                data=json.dumps(automation_manifest, ensure_ascii=False, indent=2),
-                file_name="fanqie_writer_automation_manifest.json",
-                mime="application/json",
-                width="stretch",
-            )
-        else:
-            st.caption("生成上传包后，可下载自动化清单。")
         st.markdown('</div>', unsafe_allow_html=True)
 
 

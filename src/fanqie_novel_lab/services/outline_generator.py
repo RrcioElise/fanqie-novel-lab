@@ -63,7 +63,7 @@ def outline_to_markdown(outline: NovelOutline) -> str:
     lines.append("## 前 10 章")
     for ch in outline.first_10_chapters:
         lines.append(f"### 第 {ch.get('chapter', '')} 章：{ch.get('title', '')}")
-        for k in ["goal", "conflict", "twist", "ending_hook"]:
+        for k in ["goal", "conflict", "twist", "hook_type", "foreshadowing", "reversal_logic", "ending_hook"]:
             lines.append(f"- **{k}**：{ch.get(k, '')}")
     lines.append("")
     lines.append("## 风险提醒")

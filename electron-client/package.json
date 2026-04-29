@@ -1,6 +1,6 @@
 {
   "name": "fanqie-novel-lab-electron",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Fanqie Novel Lab desktop client wrapping the local Streamlit app.",
   "main": "main.js",

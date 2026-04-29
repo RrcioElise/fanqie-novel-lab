@@ -1,6 +1,6 @@
 [project]
 name = "fanqie-novel-lab"
-version = "0.1.0"
+version = "0.2.0"
 description = "Chinese web novel ideation, outline, chapter generation, review, and publishing workflow lab"
 readme = "README.md"
 license = { file = "LICENSE" }

@@ -42,6 +42,7 @@ class PublishPackage(BaseModel):
     chapter_no: int = 1
     chapter_title: str = ""
     content: str = ""
+    author_note: str = ""
     source_chapter_path: str = ""
     upload_status: str = "待上传"
     operator_notes: str = ""
@@ -145,6 +146,7 @@ def validate_publish_package(pkg: PublishPackage, *, min_words: int = 1000, max_
     add("无 AI 说明口吻", not re.search(r"作为AI|根据你的要求|以下是|我将为你", pkg.content), "正文不应包含模型说明口吻。", "warning")
     add("段落密度", len([x for x in pkg.content.splitlines() if x.strip()]) >= 6, "建议有足够自然段，方便后台编辑和读者阅读。", "warning")
     add("章末钩子", bool(re.search(r"[？?!！。…]$", pkg.content.strip()[-12:] if pkg.content else "")), "章末建议有明确情绪、问题或反转落点。", "warning")
+    add("作者有话说", len(pkg.author_note) <= 500, "作者有话说建议控制在 500 字以内。", "warning")
     return checks
 
 
@@ -178,6 +180,13 @@ def save_publish_package(pkg: PublishPackage) -> tuple[Path, Path, Path]:
     return json_path, txt_path, md_path
 
 
+def save_publish_automation_manifest(pkg: PublishPackage, manifest: dict[str, Any] | None = None) -> Path:
+    manifest_data = manifest or build_publish_automation_manifest(pkg)
+    path = PUBLISH_PACKAGE_DIR / f"{safe_name(pkg.id)}_automation_manifest.json"
+    path.write_text(json.dumps(manifest_data, ensure_ascii=False, indent=2), encoding="utf-8")
+    return path
+
+
 def update_package_status(pkg: PublishPackage, status: str, notes: str = "") -> Path:
     pkg.upload_status = status
     if notes.strip():
@@ -194,7 +203,8 @@ def update_package_status(pkg: PublishPackage, status: str, notes: str = "") -> 
 
 def package_to_txt(pkg: PublishPackage) -> str:
     title = pkg.chapter_title.strip() or f"第{pkg.chapter_no}章"
-    return f"{title}\n\n{pkg.content.strip()}\n"
+    note = f"\n\n作者有话说：\n{pkg.author_note.strip()}\n" if pkg.author_note.strip() else ""
+    return f"{title}\n\n{pkg.content.strip()}{note}\n"
 
 
 def package_to_markdown(pkg: PublishPackage) -> str:
@@ -220,4 +230,76 @@ def package_to_markdown(pkg: PublishPackage) -> str:
 ## 正文
 
 {pkg.content.strip()}
+
+## 作者有话说
+
+{pkg.author_note.strip() or '无'}
 """
+
+
+def publish_gate_summary(pkg: PublishPackage) -> list[dict[str, Any]]:
+    """Return compact, UI-friendly publish gates for the automation panel."""
+    checks = pkg.preflight or validate_publish_package(pkg)
+    failed_errors = [x for x in checks if not x.get("通过") and x.get("级别") == "error"]
+    failed_warnings = [x for x in checks if not x.get("通过") and x.get("级别") != "error"]
+    return [
+        {
+            "门禁": "上传包完整",
+            "状态": "通过" if pkg.chapter_title.strip() and pkg.content.strip() else "阻断",
+            "说明": "标题和正文已准备" if pkg.chapter_title.strip() and pkg.content.strip() else "缺少标题或正文",
+        },
+        {
+            "门禁": "硬性错误",
+            "状态": "通过" if not failed_errors else "阻断",
+            "说明": "无阻断项" if not failed_errors else f"{len(failed_errors)} 项需要先处理",
+        },
+        {
+            "门禁": "质量提醒",
+            "状态": "通过" if not failed_warnings else "提醒",
+            "说明": "无提醒" if not failed_warnings else f"{len(failed_warnings)} 项建议复核",
+        },
+        {
+            "门禁": "最终发布",
+            "状态": "人工确认",
+            "说明": "可自动准备草稿；最终发布保留人工确认",
+        },
+    ]
+
+
+def build_publish_automation_manifest(pkg: PublishPackage) -> dict[str, Any]:
+    """Build a structured handoff for browser/form helpers.
+
+    The manifest intentionally stops before the final submit action. It can be
+    used by a local browser assistant, but the user still controls the actual
+    transmission and final publish confirmation.
+    """
+    gates = publish_gate_summary(pkg)
+    return {
+        "platform": pkg.platform,
+        "writer_zone": pkg.platform_url or FANQIE_WRITER_ZONE_URL,
+        "mode": "draft_assist_stop_before_final_submit",
+        "package_id": pkg.id,
+        "work": {
+            "work_id": pkg.work_id,
+            "title": pkg.work_title,
+        },
+        "chapter": {
+            "no": pkg.chapter_no,
+            "title": pkg.chapter_title,
+            "content": pkg.content,
+            "author_note": pkg.author_note,
+            "content_length": pkg.length,
+        },
+        "gates": gates,
+        "steps": [
+            {"step": "open_writer_zone", "label": "打开番茄作家后台", "auto": True},
+            {"step": "select_or_create_work", "label": "选择作品", "auto": "assist"},
+            {"step": "paste_title", "label": "填入章节标题", "auto": "assist"},
+            {"step": "paste_content", "label": "填入正文", "auto": "assist"},
+            {"step": "paste_author_note", "label": "填入作者有话说", "auto": "assist", "optional": True},
+            {"step": "save_draft", "label": "保存草稿", "auto": "confirm_required"},
+            {"step": "final_publish", "label": "最终发布", "auto": False, "reason": "需要作者人工确认"},
+        ],
+        "halt_points": ["login", "captcha", "risk_warning", "paid_or_permission_wall", "final_publish"],
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+    }

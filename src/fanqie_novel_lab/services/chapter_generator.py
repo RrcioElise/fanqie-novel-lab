@@ -78,16 +78,20 @@ def scene_task(scene_index: int, scene_count: int, chapter_plan: dict[str, Any])
     goal = chapter_plan.get("goal", "推进本章目标")
     conflict = chapter_plan.get("conflict", "制造外部冲突和主角选择")
     twist = chapter_plan.get("twist", "加入信息差或反转")
+    hook_type = chapter_plan.get("hook_type", "具体章末钩子")
+    foreshadowing = chapter_plan.get("foreshadowing", "在场景中自然埋入一个可回看的低调线索")
+    reversal_logic = chapter_plan.get("reversal_logic", "反转必须来自前文线索、人物动机或规则限制")
     ending_hook = chapter_plan.get("ending_hook", "章末留钩子")
+    reversal_note = f"反转={twist}；钩子类型={hook_type}；伏笔={foreshadowing}；合理性={reversal_logic}"
     if scene_count <= 1:
-        return f"完整推进本章：目标={goal}；冲突={conflict}；反转={twist}；结尾={ending_hook}"
+        return f"完整推进本章：目标={goal}；冲突={conflict}；{reversal_note}；结尾={ending_hook}"
     if scene_index == 1:
-        return f"开篇迅速入戏，建立压力源和主角处境；埋入本章目标：{goal}"
+        return f"开篇迅速入戏，建立压力源和主角处境；埋入本章目标：{goal}；同时自然放入后续反转伏笔：{foreshadowing}"
     if scene_index == scene_count:
-        return f"收束本章冲突，给出反转或更大危机，最后落到章末钩子：{ending_hook}"
+        return f"收束本章冲突，给出有迹可循的反转或更大危机：{reversal_note}；最后落到章末钩子：{ending_hook}"
     if scene_index == scene_count - 1:
-        return f"把冲突推到最紧，加入关键反转：{twist}；但不要提前完结。"
-    return f"持续升级核心冲突：{conflict}；用对白、动作和信息差推进。"
+        return f"把冲突推到最紧，加入关键反转：{reversal_note}；但不要提前完结。"
+    return f"持续升级核心冲突：{conflict}；用对白、动作和信息差推进；保留伏笔线索：{foreshadowing}。"
 
 
 def chapter_plan_from_outline(outline: NovelOutline, chapter_no: int) -> dict[str, Any]:
@@ -110,6 +114,9 @@ def chapter_plan_from_outline(outline: NovelOutline, chapter_no: int) -> dict[st
                 "goal": volume.get("goal", ""),
                 "conflict": volume.get("main_conflict", ""),
                 "twist": "围绕本卷目标推进一个新的阶段性反转",
+                "hook_type": "阶段目标反噬",
+                "foreshadowing": "从本卷已出现的规则、人物利益或物件细节中选择低调线索",
+                "reversal_logic": "反转必须来自本卷目标与主角代价之间的因果冲突",
                 "ending_hook": volume.get("ending_hook", ""),
             }
 
@@ -119,6 +126,9 @@ def chapter_plan_from_outline(outline: NovelOutline, chapter_no: int) -> dict[st
         "goal": "承接主线，推进主角阶段目标",
         "conflict": "让主角在代价、现实压力和外部阻力之间做选择",
         "twist": "章中给出信息差或规则反转",
+        "hook_type": "信息差/代价兑现",
+        "foreshadowing": "提前埋入一个可回看的物件、对白漏洞或规则例外",
+        "reversal_logic": "反转来自主角能力代价、人物利益或前文证据的重新解释",
         "ending_hook": "用新的危机或机会收尾",
     }
 

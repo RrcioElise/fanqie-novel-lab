@@ -3,10 +3,12 @@ from __future__ import annotations
 import unittest
 
 from fanqie_novel_lab.schemas import ChapterDraft, NovelOutline
-from fanqie_novel_lab.services.chapter_generator import content_length
+from fanqie_novel_lab.services.chapter_generator import chapter_plan_from_outline, content_length, scene_task
 from fanqie_novel_lab.services.chapter_reviewer import audit_chapter_against_outline
 from fanqie_novel_lab.services.open_source_readiness import readiness_summary, scan_open_source_readiness
 from fanqie_novel_lab.services.publisher import package_from_chapter, validate_publish_package
+from fanqie_novel_lab.services.quality_control import inspect_chapter_quality, quality_to_markdown
+from fanqie_novel_lab.writing_skills import DEFAULT_WRITING_SKILL_IDS, format_skill_constraints
 
 
 def sample_outline() -> NovelOutline:
@@ -42,6 +44,23 @@ class SmokeTests(unittest.TestCase):
     def test_content_length(self) -> None:
         self.assertEqual(content_length("你 好\n世界"), 4)
 
+    def test_new_hook_constraints_are_enabled(self) -> None:
+        self.assertIn("anti_ai_voice_texture", DEFAULT_WRITING_SKILL_IDS)
+        self.assertIn("foreshadowed_reversal", DEFAULT_WRITING_SKILL_IDS)
+        self.assertIn("hook_bank_diversity", DEFAULT_WRITING_SKILL_IDS)
+        chapter_constraints = format_skill_constraints(DEFAULT_WRITING_SKILL_IDS, "chapter")
+        self.assertIn("AI味", chapter_constraints)
+        self.assertIn("有迹可循", chapter_constraints)
+        self.assertIn("钩子库", chapter_constraints)
+
+    def test_inferred_chapter_plan_has_reversal_fields(self) -> None:
+        plan = chapter_plan_from_outline(sample_outline(), 12)
+        self.assertIn("hook_type", plan)
+        self.assertIn("foreshadowing", plan)
+        self.assertIn("reversal_logic", plan)
+        task = scene_task(1, 3, plan)
+        self.assertIn("伏笔", task)
+
     def test_chapter_audit_and_publish_package(self) -> None:
         outline = sample_outline()
         chapter = ChapterDraft(
@@ -69,6 +88,31 @@ class SmokeTests(unittest.TestCase):
         package = package_from_chapter(chapter)
         checks = validate_publish_package(package, min_words=50, max_words=2000)
         self.assertTrue(any(item["项目"] == "正文内容" for item in checks))
+
+    def test_quality_control_report(self) -> None:
+        outline = sample_outline()
+        chapter = ChapterDraft(
+            outline_title="记忆当铺",
+            chapter_no=1,
+            title="三天",
+            chapter_goal="林川发现记忆当铺并得到妹妹线索",
+            conflict="记忆交易的代价",
+            content=(
+                "林川攥着那张旧车票，票根背面有一串被水泡开的编号。\n"
+                "许青看见编号时，手指停在门禁卡上，没再往前走。\n"
+                "“你从哪儿拿到的？”她问。\n"
+                "“当铺。”林川说。\n"
+                "许青的脸色白了一瞬：“那不是线索，是账单。”\n"
+                "柜台抽屉里，妹妹的交易记录翻到最后一页，签名栏写着林川的名字。\n"
+                "他忽然明白，自己失去的第一段记忆，不是母亲的声音。"
+            ),
+            ending_hook="交易记录里出现林川的名字",
+            next_chapter_seed="旧车票编号对应当铺账单",
+        )
+        report = inspect_chapter_quality(outline, chapter)
+        self.assertGreaterEqual(report.ai_voice.score, 60)
+        self.assertTrue(report.foreshadow_ledger)
+        self.assertIn("反转审查", quality_to_markdown(report))
 
     def test_open_source_readiness_scan(self) -> None:
         items = scan_open_source_readiness()
